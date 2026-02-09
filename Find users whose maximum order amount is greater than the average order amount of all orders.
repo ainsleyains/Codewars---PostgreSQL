@@ -1,0 +1,46 @@
+/*
+
+🧩 New Question — Level 4 Subquery Practice
+📊 Database (same schema)
+users
+id	name	country
+1	Alice	US
+2	Bob	US
+3	Charlie	UK
+4	Diana	US
+5	Evan	UK
+orders
+id	user_id	amount	created_at
+1	1	200	2025-01-05
+2	1	800	2025-02-10
+3	2	300	2025-01-20
+4	2	400	2025-03-01
+5	3	1200	2025-02-15
+6	3	100	2025-03-10
+7	4	500	2024-12-01
+8	5	700	2025-01-25
+
+Question
+Find users whose maximum order amount is greater than the average order amount of all orders.
+Output:
+id
+name
+country
+max_amount
+
+
+
+*/
+
+
+
+
+SELECT u.id, u.name, u.country, t.max_amount
+FROM users u
+JOIN (
+    SELECT user_id,
+           MAX(amount) AS max_amount
+    FROM orders
+    GROUP BY user_id
+    HAVING MAX(amount) > (SELECT AVG(amount) FROM orders)
+) AS t ON t.user_id = u.id;
