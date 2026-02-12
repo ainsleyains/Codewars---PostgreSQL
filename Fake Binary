@@ -14,3 +14,9 @@ SELECT x,
                   '[5-9]','1','g') As res
 
 FROM fakebin;
+
+#alternative way
+
+SELECT x,
+       TRANSLATE(x,'123456789','000011111') AS res
+FROM fakebin;
