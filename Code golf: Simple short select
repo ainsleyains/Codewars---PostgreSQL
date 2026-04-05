@@ -1,0 +1,15 @@
+/*
+
+
+On this 1st of April, your goal is to return data from data table.
+You should return columns id, n, product_id, store_id, date, information, status_id, supplier_id and the rows should be ordered by column n and then by id both in descending order.
+
+Code length should be < 68 chars
+The minimum length is currently 61 chars
+
+
+*/
+
+
+ALTER TABLE data DROP amount;
+SELECT*FROM data ORDER BY -n,-id
