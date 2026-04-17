@@ -1,0 +1,15 @@
+/*
+
+You're a student in the National University of Food Technologies but with some programming background (you can't remember where you got it). Once you snuck into the deanery and found there a computer with a form with which you could search the database for a student by name. Of course you entered your name John Carmack and got some info you already know. Now you want the same info but about all nine students of your group "K-12". So you wonder, having just one form with one field, how you could get that list, ordered by name.
+
+Note: this field in this kata is the place where you usually write your solution. Now it is the place for a student name to search for.
+
+Another note: you guess that the database was made by local students who are probably not very good at data security.
+
+
+
+*/
+
+
+John Carmack 
+' OR "group"='K-12' ORDER BY name --
