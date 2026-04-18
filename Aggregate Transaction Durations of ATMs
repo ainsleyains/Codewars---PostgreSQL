@@ -1,0 +1,47 @@
+/*
+
+A financial institution wants to analyze the usage patterns of its ATMs. Each ATM transaction's duration is recorded in a unique format (hh.mm), where hh represents hours and mm represents minutes. The goal is to determine the total operation time for each ATM machine to identify high-usage machines for maintenance and operational optimization.
+
+Write a PostgreSQL query to aggregate the total duration of transactions for each ATM. The data is stored in a table named atm_transactions, with three columns:
+
+id: primary key
+transaction_duration: a string in the format hh.mm.
+atm_id: an integer representing the ATM's unique identifier.
+Your task involves the following steps:
+
+Sum the Transaction Durations: Calculate the total transaction time for each ATM. Consider that transaction_duration is in the format hh.mm, and it needs to be converted into minutes for accurate summation.
+Convert to Original Format: After calculating the total time in minutes, convert this sum back into the original hh.mm format. Ensure that the minutes are always represented with two digits.
+Order and Display: Arrange the results in descending order of total transaction time and in case of a tie - by atm_id in descending order. Display 2 columns: the atm_id along with the aggregated time in the hh.mm format (total_duration_hours).
+For this sample data:
+
+| transaction_duration| atm_id |
++---------------------+--------+
+| 1.45                | 121    |
+| 1.50                | 121    |
+| 1.50                | 121    |
+The desired output is the following:
+
+atm_id	total_duration_hours
+121	5.25
+
+
+*/
+
+
+
+SELECT
+  atm_id,
+  (total_minutes / 60) || '.' || LPAD((total_minutes % 60)::text, 2, '0')
+    AS total_duration_hours
+FROM (
+  SELECT
+    atm_id,
+    SUM(
+      SPLIT_PART(transaction_duration, '.', 1)::int * 60
+      + SPLIT_PART(transaction_duration, '.', 2)::int
+    ) AS total_minutes
+  FROM atm_transactions
+  GROUP BY atm_id
+) t
+ORDER BY total_minutes DESC, atm_id DESC;
+
