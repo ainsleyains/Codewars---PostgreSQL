@@ -78,8 +78,7 @@ SELECT p.project_id,
        p.completion_status,
        b.total_budget
 FROM budget b
-JOIN projects p
-ON p.project_id = b.project_id
+JOIN projects p USING (project_id)
 WHERE p.completion_status != 'Completed'
 AND b.total_budget > b.avg
 ORDER BY p.project_name;
