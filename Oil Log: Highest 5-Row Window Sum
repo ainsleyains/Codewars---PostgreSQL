@@ -1,0 +1,80 @@
+/*
+
+Oil companies collect thousands of downhole measurements while drilling. One of the most common logs is a depth-indexed signal (such as gamma ray, density, resistivity, or the simplified ktim value here). Each reading corresponds to a specific depth in the well, and the wells are always logged from shallow to deep.
+
+Geologists often want to identify the strongest continuous intervals in the well. In this kata, an interval is defined as exactly 5 consecutive depth readings.
+
+You are given a database table named well_log, with the following structure:
+
+id (int): primary key
+depth (float): the measured depth, always increasing.
+ktim (float): the signal amplitude at that depth.
+Your task is to write a SQL query that:
+
+Computes every 5-reading interval, calculates its total ktim value, and returns all intervals sorted by total ktim in descending order.
+
+This allows a geologist to quickly locate the most promising zones.
+
+Output Columns
+
+Your query must return one row per interval, containing:
+
+start_depth (float) — depth of the first reading in the interval
+end_depth (float) — depth of the fifth reading
+total_ktim (varchar) — sum of ktim values across the 5 adjacent rows, rounded to two decimals for clean presentation. Ordering must be based on its numeric value, not lexicographic string order.
+Rules & Requirements
+
+Each interval must include exactly 5 adjacent rows, ordered by depth.
+All possible intervals must be returned. It is quaranteed that there will be more than 5 raws in the table.
+Result must be sorted by total_ktim DESC, strongest first. If two intervals have the same total_ktim, the one with the lower start_depth must come first.
+For this sample data:
+
+| depth   | ktim    |
++---------+---------+
+| 6999.0  | 576.46  |
+| 6999.5  | 892.10  |
+| 7000.0  | 10.12   |
+| 7000.5  | 22.07   |
+| 7001.0  | 186.55  |
+| 7001.5  | 577.98  |
+| 7002.0  | 799.42  |
+| 7002.5  | 334.15  |
+| 7003.0  | 99.43   |
+| 7003.5  | 111.43  |
+| 7004.0  | 41.94   |
+expected output is the following:
+
+| start_depth | end_depth | total_ktim |
++-------------+-----------+------------+
+| 7001.0      | 7003.0    | 1997.53    |
+| 7001.5      | 7003.5    | 1922.41    |
+| 7000.5      | 7002.5    | 1920.17    |
+| 6999.5      | 7001.5    | 1688.82    |
+| 6999.0      | 7001.0    | 1687.30    |
+| 7000.0      | 7002.0    | 1596.14    |
+| 7002.0      | 7004.0    | 1386.37    |
+GLHF!
+
+
+*/
+
+
+WITH total AS (
+          SELECT depth AS start_depth,
+                 LEAD(depth,4) OVER(ORDER BY depth) AS end_depth,
+                 ROUND(
+                        SUM(ktim) OVER (
+                          ORDER BY depth
+                          ROWS BETWEEN CURRENT ROW AND 4 FOLLOWING
+                        )::numeric,
+                        2
+                      ) AS total_ktim_num
+                    FROM well_log
+)
+
+SELECT start_depth,
+       end_depth,
+       total_ktim_num::VARCHAR AS total_ktim
+FROM total
+WHERE end_depth IS NOT NULL
+ORDER BY total_ktim_num DESC, start_depth ASC;
