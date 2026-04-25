@@ -70,9 +70,24 @@ GLHF!
 
 */
 
+WITH events(date, n) AS(
+          SELECT join_date ::DATE :: TEXT, 1 FROM admissions
+          UNION ALL
+          SELECT exit_date :: DATE :: TEXT, -1 FROM exits
+)
+SELECT date,
+       COUNT(*) FILTER (WHERE n > 0) AS joins,
+       COUNT(*) FILTER (WHERE n < 0) AS exits,
+       SUM(n) AS net,
+       SUM(SUM(n)::INT) OVER (ORDER BY date) AS cumulative_net
+FROM events
+GROUP BY date
+ORDER BY date;
 
 
 
+
+#Alternative way
 
 WITH dates AS (
     SELECT GENERATE_SERIES(
