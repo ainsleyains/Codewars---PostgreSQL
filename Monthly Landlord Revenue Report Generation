@@ -66,7 +66,39 @@ GLHF!
 */
 
 
+WITH revenue AS (
+    SELECT landlord_id, SUM(rent) AS total_rent
+    FROM property
+    GROUP BY landlord_id
+),
+totals AS (
+    SELECT l.id AS landlord_id,
+           l.name,
+           COALESCE(r.total_rent, 0) AS total_rent,
+           COALESCE(
+               SUM(m.cost) FILTER (
+                   WHERE m.maintenance_date BETWEEN '2024-04-01' AND '2024-04-30'
+               ),
+               0
+           ) AS total_cost
+    FROM landlord l
+    LEFT JOIN revenue     r ON r.landlord_id = l.id
+    LEFT JOIN property    p ON p.landlord_id = l.id
+    LEFT JOIN maintenance m ON m.property_id = p.id
+    GROUP BY l.id, l.name, r.total_rent
+)
+SELECT landlord_id,
+       name,
+       total_rent,
+       total_cost,
+       total_rent - total_cost AS amount_payable
+FROM totals
+ORDER BY total_rent DESC, landlord_id DESC;
 
+
+
+
+#alternative way
 
 WITH revenue AS (
           SELECT landlord_id,
