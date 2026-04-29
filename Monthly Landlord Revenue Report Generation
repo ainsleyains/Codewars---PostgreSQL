@@ -1,0 +1,98 @@
+/*
+
+
+You are working as a database manager for a property management company. The company oversees various properties, each owned by different landlords. Your task is to create a monthly report that shows how much each landlord should be paid. This payment is calculated by summing up the total rent from all properties owned by a landlord and then subtracting the total cost of maintenance carried out on those properties for the month.
+
+Develop an SQL query that generates a monthly invoice for each landlord. The invoice should include the landlord's ID and name, total rent from all properties they own, total maintenance costs for those properties for a specific month (April, 2024), and the final amount payable to the landlord.
+
+We have landlord table:
+
+id (integer, primary Key): Unique identifier for the landlord.
+name (varchar): Name of the landlord.
+email (varchar): Email address of the landlord.
+property table:
+
+id (integer, primary Key): Unique identifier for the property.
+address (varchar): Physical address of the property.
+rent (integer): Monthly rent price for the property.
+landlord_id (integer, Foreign Key to landlord table): ID of the landlord who owns the property.
+and maintenance table:
+
+id (integer, primary Key): Unique identifier for the maintenance record.
+details (varchar): Description of the maintenance work.
+cost (integer): Cost of the maintenance work.
+maintenance_date (date): Date when the maintenance was carried out.
+property_id (integer, foreign key to property table): ID of the property where the maintenance was performed.
+The query should output a table with columns:
+
+landlord_id (integer): ID of the landlord.
+name (varchar): Name of the landlord.
+total_rent (integer): Total rent collected from all properties owned by the landlord.
+total_cost (integer): Total maintenance cost for those properties for the April, 2024.
+amount_payable (integer): The total rent minus the total maintenance cost.
+The final output should be ordered first by the total_rent in descending order, showcasing those landlords due the most at the top, and then by landlord_id in descending order for easy reference.
+
+For this sample data:
+
+landlord:
+
+id  |    name    |       email       
+----|------------|-------------------
+ 1  | J Johnson  | jj@example.com    
+ 2  | R Kelly    | rk@example.com    
+property:
+
+id |  address   | rent | landlord_id 
+---|------------|------|-------------
+1  | 123 Street | 400  |      1      
+2  | 456 Avenue | 600  |      1      
+3  | 789 Blvd   | 750  |      2     
+maintenance: 
+
+id  |   details      | cost | maintenance_date | property_id 
+----|----------------|------|------------------|------------
+1   | Fixing pipes   |  25  | 2024-04-05       |      1      
+2   | Painting walls | 120  | 2024-04-10       |      2      
+3   | Window replace |  35  | 2024-04-15       |      3      
+The desired output is the following:
+
+landlord_id	name	total_rent	total_cost	amount_payable
+1	J Johnson	1000	145	855
+2	R Kelly	750	35	715
+GLHF!
+
+
+
+*/
+
+
+
+
+WITH revenue AS (
+          SELECT landlord_id,
+                 SUM(rent) AS total_rent
+          FROM property
+          GROUP BY landlord_id
+),
+cost AS(
+          SELECT p.landlord_id,
+                 SUM(cost) AS total_cost
+          FROM maintenance m
+          JOIN property p
+          ON p.id = m.property_id
+          WHERE maintenance_date BETWEEN '2024-04-01' AND '2024-04-30'
+          GROUP BY landlord_id
+)
+
+
+SELECT l.id AS landlord_id,
+       l.name AS name,
+       COALESCE (r.total_rent,0 ) AS total_rent,
+       COALESCE (c.total_cost, 0) AS total_cost,
+       COALESCE (r.total_rent,0 ) - COALESCE ( c.total_cost, 0) AS amount_payable
+FROM landlord l
+LEFT JOIN revenue r
+ON r.landlord_id = l.id
+LEFT JOIN cost c
+ON c.landlord_id = l.id
+ORDER BY 3 DESC, 1 DESC;
