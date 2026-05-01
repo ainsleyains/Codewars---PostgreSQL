@@ -1,0 +1,48 @@
+/*
+
+The HR department requests a report on the percentage of employees within specific age intervals to aid in understanding the company's generational workforce distribution.
+
+You have been provided with a database containing an employees table with the following schema:
+
+employee_id (integer): A unique identifier for each employee.
+date_of_birth (date): The birth date of the employee
+Your task is to write an SQL query that calculates the current age of each employee, categorizes these ages into intervals (18-20, 26-40, and above 40 years), and returns the percentage of employees within each interval. Round all percentages to two decimal places.
+
+Requirements:
+
+Compute the current age of each employee from their date_of_birth based on the current date.
+Use the calculated ages to categorize employees into the following age brackets: 18-20 (inclusive), 26-40, and above 40. Ensure the age ranges include the entire span (e.g., up to but not including 21 years for the 18-20 bracket).
+Calculate the percentage of the total workforce that falls within each age bracket, rounding the result to two decimal places. For age brackets with no employees, the query should display 0.0.
+The query should output a table with two columns: age_interval and percent (of numeric datatype). The age_interval should be a string representation of the age range ('18-20', '26-40', '>40'), and percent should be the corresponding percentage of total employees, rounded to two decimal places.
+GLHF!
+
+
+*/
+
+
+
+WITH ages AS (
+    SELECT EXTRACT(YEAR FROM AGE(date_of_birth)) AS age
+    FROM employees
+),
+total AS (
+    SELECT COUNT(*)::numeric AS cnt FROM ages
+),
+buckets AS (
+    SELECT '18-20' AS age_interval,
+           COUNT(*) FILTER (WHERE age BETWEEN 18 AND 20) AS cnt
+    FROM ages
+    UNION ALL
+    SELECT '26-40',
+           COUNT(*) FILTER (WHERE age BETWEEN 26 AND 40)
+    FROM ages
+    UNION ALL
+    SELECT '>40',
+           COUNT(*) FILTER (WHERE age > 40)
+    FROM ages
+)
+SELECT
+    age_interval,
+    ROUND(COALESCE(100.0 * cnt / NULLIF((SELECT cnt FROM total), 0), 0), 2) AS percent
+FROM buckets
+ORDER BY CASE age_interval WHEN '18-20' THEN 1 WHEN '26-40' THEN 2 ELSE 3 END;
