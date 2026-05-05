@@ -34,8 +34,21 @@ India        | 195.85 M          |
 
 */
 
+SELECT country,
+       ROUND((
+           MAX(population) FILTER (WHERE year = 2020)
+         - MAX(population) FILTER (WHERE year = 2000)
+       ) / 1000000.0, 2) || ' M' AS population_increase
+FROM world_population
+WHERE year IN (2000, 2020)
+GROUP BY country
+ORDER BY MAX(population) FILTER (WHERE year = 2020)
+       - MAX(population) FILTER (WHERE year = 2000) DESC
+LIMIT 5;
 
 
+
+#ALternative way
 
 SELECT country,
        ROUND((MAX(CASE WHEN year = 2020 THEN population END) -
