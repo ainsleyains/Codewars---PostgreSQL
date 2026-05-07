@@ -1,0 +1,44 @@
+/*
+
+You work at the platform with registered users and unregistered/deleted users whose usernames in DB have a pattern of "User" followed by digits. Your task is to aggregate users' activity data, grouping unregistered/deleted users under the label GROUP_OTHERS.
+
+user_activity
+
+id (integer) - Unique identifier for each record.
+username (varchar) - Username associated with the activity. May not be unique as multiple records for the same username are possible.
+activity_count (integer) - The count of activities performed by the user.
+Write a SQL query that achieves the following:
+
+Groups records based on username.
+For usernames that start with "User" and are followed only by digits (i.e. 'User6314923423'), groups them under the label GROUP_OTHERS.
+Filters out records from the table where activity_count is not between 1 and 2000 inclusive, then calculates the total amount of activities for each user.
+Sorts the results such that GROUP_OTHERS appears first, followed by the rest in alphabetical order.
+Expected Output Columns:
+
+user (varchar) - The name of the user. Unregistered users are labeled as GROUP_OTHERS.
+total_activity (integer) - The total count of activities performed by each user group.
+GLHF!
+
+Desired Output
+
+The desired output should look like this:
+
+username	total_activity
+GROUP_OTHERS	20
+bornForThis	226
+dfhwze	248
+matt c	93
+
+
+
+*/
+
+
+
+SELECT CASE WHEN username ~ '^User\d+$' THEN 'GROUP_OTHERS' ELSE username END AS username,
+       SUM(activity_count) AS total_activity
+FROM user_activity
+WHERE activity_count BETWEEN 1 AND 2000
+GROUP BY 1
+ORDER BY (CASE WHEN username ~ '^User\d+$' THEN 'GROUP_OTHERS' ELSE username END = 'GROUP_OTHERS') DESC,
+         CASE WHEN username ~ '^User\d+$' THEN 'GROUP_OTHERS' ELSE username END;
