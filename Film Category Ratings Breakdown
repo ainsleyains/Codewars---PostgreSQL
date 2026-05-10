@@ -1,0 +1,62 @@
+/*
+
+Write an SQL query to retrieve the percentage of films with each rating for each category in the DVD rental database. The query should display the following columns:
+
+category_name: The name of the category that the films belong to.
+film_rating: The rating of the films in the category.
+percentage: The percentage of films with the given rating in the category. This param should be rounded to 3 decimal places (and exactly 3 decimal places should be displayed).
+The query result should be ordered by category_name in ascending order, and then by percentage in descending orders. If there are tied percentages for a given category, the results should be ordered by film rating in alphabetical order.
+
+Notes:
+
+for the sample tests, static dump of DVD Rental Sample Database is used, for the final solution - random tests.
+The percentage should be calculated by dividing the count of films with the given rating by the total count of films in the category, multiplied by 100
+please use numeric type to display percentage
+Good luck!
+
+Schema
+
+film table:
+
+Column           | Type     | Modifiers
+-----------------+----------+----------
+film_id          | integer  | not null
+title            | varchar  | not null
+description      | text     | not null
+rating           | varchar  | not null
+film_category table:
+
+Column      | Type      | Modifiers
+------------+---------- +----------
+film_id     | smallint  | not null
+category_id | smallint  | not null
+category table:
+
+Column      | Type      | Modifiers
+------------+-----------+----------
+category_id | smallint  | not null
+name        | text      | not null
+Desired Output
+
+The desired output should look like this:
+
+| category_name | film_rating | percentage |
+|---------------|-------------|------------|
+| Action        | NC-17       | 0.325e2    |
+| Action        | R           | 0.2e2      |
+| ...           | ...         | ...        |
+
+
+*/
+
+
+
+SELECT c.name AS category_name,
+       f.rating AS film_rating,
+       ROUND(COUNT(*) * 100.0 / SUM(COUNT(*) )OVER(PARTITION BY c.name),3) AS percentage
+       
+FROM film f
+JOIN film_category fc USING (film_id)
+JOIN category c USING (category_id)
+GROUP BY 1 , 2
+ORDER BY 1, 3 DESC, 2
