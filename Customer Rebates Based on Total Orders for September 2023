@@ -1,0 +1,63 @@
+/*
+
+You are provided with two PostgreSQL tables: rebates and orders. The rebates table contains information about the percentage of rebate given to customers based on their total purchase amount. The orders table stores data about customer orders, including the order amount and the date the order was placed.
+
+rebates:
+
+id (integer) - Unique identifier for the rebate entry.
+rebate_percentage (float) - The percentage of rebate that applies.
+min_purchase (integer) - The minimum total purchase amount to qualify for the given rebate.
+orders:
+
+id (integer) - Unique identifier for the order.
+customer_id (integer) - Identifier for the customer who placed the order.
+order_amount (integer) - The amount of the order.
+order_date (date) - The date the order was placed.
+Your task is to write an SQL query that calculates the total amount of orders for each customer for September 2023 and determines the corresponding rebate percentage they are eligible for based on their total orders.
+
+Objectives:
+
+Calculate the sum of order amounts for each customer for orders placed in September 2023 (Assuming that the orders table contains various orders with order_date spanning different months and years, and order_amount varying between orders).
+Determine the appropriate rebate percentage for each customer based on the calculated total order amount.
+Exclude customers who do not have orders in September 2023 or whose total orders in September 2023 are below the lowest min_purchase in the rebates table.
+A result set should contain the following columns:
+
+customer_id (integer) - The ID of the customer.
+total_orders (integer) - The total sum of the orders made by the customer in September 2023.
+rebate_percentage (float) - The rebate percentage applicable to the customer based on their total orders in September 2023.
+and be sorted by customer_id in descending order.
+
+Notes:
+
+The rebates table contains random but strictly increasing rebate_percentage and min_purchase values. There are no overlaps, meaning each customer is eligible for exactly one rebate based on their total purchase amount.
+GLHF!
+
+
+*/
+
+
+WITH september_totals AS (
+  SELECT customer_id,
+         SUM(order_amount) AS total_orders
+  FROM orders
+  WHERE order_date BETWEEN '2023-09-01' AND '2023-09-30'
+  GROUP BY customer_id
+),
+best_rebate AS (
+  SELECT DISTINCT ON (s.customer_id)
+         s.customer_id,
+         s.total_orders,
+         r.rebate_percentage
+  FROM september_totals s
+  JOIN rebates r ON s.total_orders >= r.min_purchase
+  ORDER BY s.customer_id, r.min_purchase DESC
+)
+SELECT customer_id, total_orders, rebate_percentage
+FROM best_rebate
+ORDER BY customer_id DESC;
+       
+
+
+
+
+
