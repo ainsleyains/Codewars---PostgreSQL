@@ -12,8 +12,7 @@ Tables and relationship below:
 */
 
 
-SELECT id, 
-       name,
-       price
+
+SELECT *
 FROM product
-WHERE TO_TSVECTOR('english',name) @@ TO_TSQUERY('english','Awesome');
+WHERE TO_TSVECTOR(name) @@ TO_TSQUERY('Awesome');
