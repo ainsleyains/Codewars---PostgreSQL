@@ -28,5 +28,13 @@ city_name (string): the name of the city
 
 SELECT DISTINCT city_name 
 FROM stations 
+WHERE city_name ~ '^[AEIOU]'
+ORDER BY city_name ASC;
+
+
+#ALternative way
+
+SELECT DISTINCT city_name 
+FROM stations 
 WHERE city_name SIMILAR TO '(A|E|I|O|U)%'
 ORDER BY 1;
