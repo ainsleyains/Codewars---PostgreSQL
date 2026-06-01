@@ -1,0 +1,17 @@
+/*
+
+Write a SELECT query which will return all prime numbers smaller than 100 in ascending order.
+
+Your query should return one column named prime.
+
+
+*/
+
+
+SELECT n AS prime
+FROM generate_series(2, 99) AS n
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM generate_series(2, FLOOR(SQRT(n))::INT) AS d
+  WHERE n % d = 0
+);
