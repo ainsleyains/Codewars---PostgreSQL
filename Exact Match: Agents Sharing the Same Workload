@@ -1,0 +1,75 @@
+/*
+
+Imagine you are working for a large online customer-support platform. Support agents are assigned to various support tickets, and these assignments are stored in a database table called agent_ticket_assignments. Each ticket may require multiple agents, and each agent may be working across many tickets.
+
+Management wants to identify agents who are working on exactly the same set of tickets. These "assignment twins" might represent duplicated workload, redundant routing rules, or natural teams that should be grouped together.
+
+The agent_ticket_assignments table has the following structure:
+
+agent_id (int): The ID of the support agent.
+ticket_id (int): The ID of the ticket assigned to the agent.
+Your task is to write a SQL query that identifies pairs of agents who have identical ticket assignment sets — meaning:
+
+Every ticket assigned to Agent A is also assigned to Agent B, and
+Every ticket assigned to Agent B is also assigned to Agent A, and
+No extra or missing tickets exist between them.
+Additionally, you must ensure that each pair is reported only once, regardless of ordering. You should always assign the smaller ID to the first output column and the larger ID to the second.
+
+Output Columns:
+
+agent1_id: The smaller agent ID in the pair
+agent2_id: The larger agent ID in the pair
+Output should be sorted first by agent1_id and then by agent2_id, both in ascending order.
+
+Notes:
+
+An agent may appear in the table multiple times for the same ticket. Your query must correctly handle duplicates.
+There are no "empty" agents — every agent that appears in the table has at least one ticket.
+For this sample data:
+
+| agent_id | ticket_id |
++----------+-----------+
+| 101      | 5001      |
+| 101      | 5002      |
+| 102      | 5001      |
+| 102      | 5002      |
+| 303      | 6001      |
+the expected result is:
+
+| agent1_id | agent2_id |
++-----------+-----------+
+| 101       | 102       |
+GLHF!
+
+
+
+*/
+
+
+WITH agent_tickets AS (
+  SELECT DISTINCT agent_id, ticket_id
+  FROM agent_ticket_assignments
+),
+agent_counts AS (
+  SELECT agent_id, COUNT(*) AS n
+  FROM agent_tickets
+  GROUP BY agent_id
+)
+SELECT a.agent_id AS agent1_id,
+       b.agent_id AS agent2_id
+FROM agent_counts a
+JOIN agent_counts b
+  ON a.n = b.n
+ AND a.agent_id < b.agent_id
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM agent_tickets ta
+  WHERE ta.agent_id = a.agent_id
+    AND NOT EXISTS (
+      SELECT 1
+      FROM agent_tickets tb
+      WHERE tb.agent_id = b.agent_id
+        AND tb.ticket_id = ta.ticket_id
+    )
+)
+ORDER BY agent1_id, agent2_id;
