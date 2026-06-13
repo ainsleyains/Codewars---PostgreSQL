@@ -1,0 +1,61 @@
+/*
+
+Let's say we have a table called sales_data and it contains daily sales data. The table has two columns: day (an integer representing the day) and sales (an integer representing the sales amount for that day).
+
+Sometimes, for whatever reason, sales data for a certain day might be missing (NULL). We want to fill in these missing values with the last recorded sales data.
+
+Here is a sample sales_data table:
+
+day | sales
+----+------
+  1 | 100
+  2 | 150
+  3 | NULL
+  4 | NULL
+  5 | 200
+  6 | 120
+  7 | NULL
+  8 | NULL
+  9 | NULL
+Your task is to write a SQL query that returns a result set with the same day values, but where the sales values have been replaced in such a way that each NULL value is replaced by the last non-NULL value (ordered by day). If the first sales values are NULL, they should remain NULL.
+
+The result set for the sample sales_data table above should look like this:
+
+day | filled_sales
+----+-------------
+  1 | 100
+  2 | 150
+  3 | 150
+  4 | 150
+  5 | 200
+  6 | 120
+  7 | 120
+  8 | 120
+  9 | 120
+GLHF!
+
+
+
+*/
+
+SELECT
+  day,
+  COALESCE(sales,
+    LAG(sales) IGNORE NULLS OVER (ORDER BY day)
+  ) AS filled_sales
+FROM my_table;
+
+
+#ALternative way 
+
+SELECT
+  day,
+  MAX(sales) OVER (PARTITION BY grp) AS filled_sales
+FROM (
+  SELECT
+    day,
+    sales,
+    COUNT(sales) OVER (ORDER BY day) AS grp
+  FROM sales_data
+) t
+ORDER BY day;
