@@ -38,6 +38,20 @@ GLHF!
 */
 
 
+SELECT DISTINCT ON (o.order_id)
+  o.order_id,
+  o.item_id,
+  o.order_timestamp::TEXT,
+  p.new_price
+FROM orders o
+LEFT JOIN price_changes p
+  ON p.item_id = o.item_id
+ AND p.change_timestamp <= o.order_timestamp
+ORDER BY o.order_id, p.change_timestamp DESC;
+
+
+
+#ALternative Way
 
 SELECT 
        o.order_id,
