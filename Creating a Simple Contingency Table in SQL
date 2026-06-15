@@ -1,0 +1,40 @@
+/*
+
+You are required to replicate and analyze a contingency table similar to the example of sex and handedness found on Wikipedia.
+
+Create and analyze a contingency table using SQL to understand the relationship between two categorical variables: sex (male or female) and handedness (right-handed or left-handed).
+
+We have survey_data table with the following columns:
+
+id (int): primary key
+sex (varchar): A string indicating the sex of the individual (either 'Male' or 'Female').
+handedness (varchar): A string indicating whether the individual is 'Right-handed' or 'Left-handed'.
+Write a SQL query to create a contingency table that shows the number of right-handed and left-handed individuals, broken down by sex.
+
+The final output should include:
+
+Columns: "Sex/Handedness", "Right-handed", "Left-handed", "Total".
+Rows for 'Male', 'Female', and a 'Total' row summing up each column.
+We also need to implement custom ordering in the output: first 'Male', then 'Female', followed by 'Total'.
+
+Desired Output
+
+The desired output should look like this:
+
+Sex/Handedness	Right-handed	Left-handed	Total
+Male	43	9	52
+Female	44	4	48
+Total	87	13	100
+GLHF!
+
+
+*/
+
+
+SELECT COALESCE(sex, 'Total') AS "Sex/Handedness",
+       SUM(CASE WHEN handedness = 'Right-handed' THEN 1 ELSE 0 END) AS "Right-handed",
+       SUM(CASE WHEN handedness = 'Left-handed'  THEN 1 ELSE 0 END) AS "Left-handed",
+       COUNT(handedness) AS "Total"
+FROM survey_data
+GROUP BY ROLLUP(sex)
+ORDER BY CASE WHEN sex IS NULL THEN 1 ELSE 0 END, sex DESC;
