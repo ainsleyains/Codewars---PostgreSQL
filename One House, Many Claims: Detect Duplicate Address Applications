@@ -1,0 +1,67 @@
+/*
+
+The city launched a Green Energy Rebate Program to encourage households to install solar panels. Each household is eligible for one rebate only, determined by a unique combination of house_no and street_name.
+
+However, due to a bad UI on the government website, several applicants submitted duplicate applications from the same address—often believing theirs was the only one.
+
+As part of the Municipal Audit, your task is to detect all duplicate addresses, and for each one, return a single summary line flagging the issue.
+
+energy_rebate_applications:
+
+id (intger): primary key
+applicant_id (integer, unique): Unique ID for the application form
+house_no (integer): Civic number
+street_name (varchar): Street
+Your query must return:
+
+A single column named audit_note with one row per duplicated address, formatted like:
+
+{N} applications (applicant_ids: ID1, ID2, ...) already filed at {house_no} {street_name}
+
+Important: The applicant_ids inside each note must be listed in ascending order.
+
+Notes:
+
+Sort the final result by:
+Number of applications (desc)
+Street name (asc)
+House number (asc)
+For this sample data:
+
+| applicant_id  | house_no | street_name      |
++---------------+----------+------------------+
+| 1021          | 6        | Mc Gill Crst     |
+| 1097          | 6        | Mc Gill Crst     |
+| 1300          | 195      | Mc Gill Crst     |
+| 1402          | 195      | Mc Gill Crst     |
+| 101           | 12       | Elm St           |
+| 107           | 12       | Elm St           |
+| 112           | 12       | Elm St           |
+| 4000          | 22       | Baker Street     |
+Expected output is the followng:
+
+| audit_note                                                                   |
++------------------------------------------------------------------------------+
+| 3 applications (applicant_ids: 101, 107, 112) already filed at 12 Elm St     |
+| 2 applications (applicant_ids: 1021, 1097) already filed at 6 Mc Gill Crst   |
+| 2 applications (applicant_ids: 1300, 1402) already filed at 195 Mc Gill Crst |
+
+
+*/
+
+
+
+SELECT
+  COUNT(*) || ' applications (applicant_ids: '
+    || STRING_AGG(applicant_id::text, ', ' ORDER BY applicant_id)
+    || ') already filed at ' || house_no || ' ' || street_name AS audit_note
+FROM energy_rebate_applications
+GROUP BY house_no, street_name
+HAVING COUNT(*) > 1
+ORDER BY COUNT(*) DESC,
+         street_name ASC,
+         house_no::int ASC;
+
+
+
+
