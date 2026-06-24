@@ -1,0 +1,66 @@
+/*
+
+Your task is to write a SQL query that joins three tables (students, courses, and enrollments) and will create a matrix-like output that includes only "active" students and courses. An "active" student or course is defined as one that has at least one record in the enrollments table.
+
+The matrix should indicate whether or not each active student is enrolled in each active course.
+
+students:
+
+student_id (integer) - The unique identifier for a student.
+name (varchar) - The name of the student.
+courses:
+
+course_id (integer) - The unique identifier for a course.
+course_name (varchar) - The name of the course.
+enrollments:
+
+student_id (integer) - The student identifier, a foreign key referencing students.
+course_id (integer) - The course identifier, a foreign key referencing courses.
+Constraints:
+
+The output should only include students and courses that are active, i.e., they exist in the enrollments table.
+The output columns should include a formatted string for students and courses, as well as a flag (is_exists) to indicate the relationship status.
+The output should be sorted by student_id and then by course_id - both in ascending order
+Expected output columns:
+
+student (varchar) - A formatted string showing the student name and ID, like "John Doe (1)".
+course (varchar) - A formatted string showing the course name and ID, like "Mathematics (101)".
+is_exists (integer) - A flag indicating whether the student is enrolled in the course (1) or not (0).
+GLHF!
+
+Desired Output
+
+The desired output should look like this:
+
+student	course	is_exists
+Miss Juan Connelly (1)	Law 487 (1)	1
+Miss Juan Connelly (1)	Teaching 551 (2)	0
+Miss Juan Connelly (1)	Business 555 (3)	1
+Miss Juan Connelly (1)	Architectural Technology 572 (4)	0
+Miss Juan Connelly (1)	Arts 479 (5)	0
+...
+
+
+*/
+
+
+
+
+WITH s AS (
+    SELECT DISTINCT st.student_id, st.name
+    FROM students st
+    JOIN enrollments en USING (student_id)        -- keeps only enrolled students
+),
+c AS (
+    SELECT DISTINCT co.course_id, co.course_name
+    FROM courses co
+    JOIN enrollments en USING (course_id)         -- keeps only courses with enrollments
+)
+SELECT
+    s.name        || ' (' || s.student_id || ')' AS student,
+    c.course_name || ' (' || c.course_id  || ')' AS course,
+    CASE WHEN en.student_id IS NOT NULL THEN 1 ELSE 0 END AS is_exists
+FROM s
+CROSS JOIN c
+LEFT JOIN enrollments en USING (student_id, course_id)
+ORDER BY s.student_id, c.course_id;
