@@ -1,0 +1,59 @@
+/*
+
+Imagine that you are a data analyst for a fast-growing tech startup that has an online platform with users signing up daily. You have been tasked with monitoring user sign-up activity to help inform business decisions and planning.
+
+You have access to a users table in a PostgreSQL database. This table is updated in real-time as new users sign up for the platform. Here's a brief overview of the relevant columns in the users table:
+
+id (integer): A unique identifier for each record in the table. Each unique user registration generates a new record with a unique ID.
+user_name (varchar): The username chosen by the user when they registered.
+registered_at (timestamp): The date and time when the user completed the registration process.
+Your task is to write an SQL query that generates a report showing the daily number of user registrations and an 8-day running average of registrations, including the current day and the preceding 7 days. This report should include all dates between the earliest and latest registration date in the database, inclusive. If there were no registrations on a given date, the daily number of registrations should be reported as 0 for that date.
+
+The result set should include the following columns:
+
+date (date): The calendar date. This should include all dates from the earliest to the latest registration date in the database.
+sign_ups (integer): The number of users who registered on the given date. If no users registered on a date, this should be 0.
+avg_signups (numeric): The 8-day running average of sign_ups, including the current row and the 7 preceding rows (total of 8 days). If there are fewer than 8 days of data available (for example, for the first few dates in the table), the average should be calculated over the available number of days. Should be of numeric type, rounded to 2 decimal places for neatness
+For example, if today is Monday, July 24, 2023, and you're calculating the avg_signups for this day, the average should include the sign_ups for Monday, July 24, 2023, as well as the sign_ups for each of the 7 preceding days (Sunday, July 23 back to Monday, July 17, 2023). The average will be calculated over these 8 days.
+
+If any of these days had no registrations (for example, if there were no registrations on Wednesday, July 19, 2023), the sign_ups for that day should be treated as 0 when calculating the avg_signups
+
+The results should be ordered by date in ascending order.
+
+GLHF!
+
+Desired Output
+
+The desired output should look like this:
+
+date	sign_ups	avg_signups
+2023-07-01	10	0.1e2
+2023-07-02	20	0.15e2
+2023-07-03
+
+
+*/
+
+
+
+WITH date_series AS (
+                SELECT generate_series(
+                (SELECT MIN(CAST(registered_at AS DATE) ) FROM users),
+                (SELECT MAX(CAST(registered_at AS DATE) ) FROM users),
+                INTERVAL '1 day'
+        ):: DATE as date    
+),
+daily_count AS (
+                SELECT CAST(registered_at AS DATE) AS date, 
+                       COUNT(id) AS cnt
+                FROM users
+                GROUP BY CAST(registered_at AS DATE) 
+)
+
+SELECT date,
+       COALESCE(dc.cnt, 0) AS sign_ups,
+       ROUND(AVG(COALESCE(dc.cnt, 0)) OVER (ORDER BY d.date ROWS BETWEEN 7 PRECEDING AND CURRENT ROW) :: NUMERIC, 2 )AS avg_signups
+FROM date_series d
+LEFT JOIN daily_count dc USING(date)
+ORDER BY date;
+
