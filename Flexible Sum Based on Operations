@@ -1,0 +1,68 @@
+/*
+
+You are given a table named transactions, which records various operations performed on a financial account. The table consists of the following columns:
+
+id: An integer representing the unique identifier for each transaction.
+operation: A string representing the type of operation. It can have one of five values: 'add', 'remove', 'make', 'freeze', or 'hold'.
+amount: An integer representing the amount involved in the operation.
+date: A date in the 'YYYY-MM-DD' format representing the date of the operation.
+The objective of this task is to write an SQL query that calculates a running sum, which we'll refer to as flexible_sum, based on the operations in the table. The rules for calculating flexible_sum are as follows:
+
+If the operation is 'add', the amount should be added to flexible_sum.
+If the operation is 'remove', the amount should be subtracted from flexible_sum.
+If the operation is one of the other three types ('make', 'freeze', or 'hold'), flexible_sum should remain unchanged from the previous row.
+If a record starts with one of the operations 'make', 'freeze', or 'hold', flexible_sum should display 0.
+Your query:
+
+must select all columns from the transactions table.
+must include a new column, flexible_sum, which represents the running sum based on the rules above.
+must order the results by the date and id columns in ascending order (it applies both for the rolling sum and the main query).
+GLHF!
+
+Desired Output
+
+The desired output should look like this:
+
+id	operation	amount	date	flexible_sum
+1	add	5	2023-01-01	5
+2	freeze	5	2023-01-02	5
+3	add	5	2023-01-02	10
+4	add	1	2023-01-03	11
+5	remove	5	2023-01-04	6
+6	add	4	2023-01-04	10
+7	make	8	2023-01-04	10
+8	add	5	2023-01-04	15
+
+
+*/
+
+
+SELECT id,
+       operation,
+       amount,
+       date,
+       SUM(
+            CASE
+                 WHEN operation = 'add' THEN amount
+                 WHEN operation = 'remove' THEN -amount
+                 ELSE 0
+            END
+       ) OVER(ORDER BY date, id ) AS flexible_sum     
+FROM transactions;
+
+
+
+#Alternative way
+
+SELECT id,
+       operation,
+       amount,
+       date,
+       SUM(
+            CASE
+                 WHEN operation = 'add' THEN amount
+                 WHEN operation = 'remove' THEN -amount
+                 ELSE 0
+            END
+       ) OVER(ORDER BY date, id ROWS UNBOUNDED PRECEDING) AS flexible_sum     
+FROM transactions
