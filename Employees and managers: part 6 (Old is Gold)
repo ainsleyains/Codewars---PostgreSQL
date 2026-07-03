@@ -1,0 +1,45 @@
+/*
+
+You have been provided with a PostgreSQL database that contains an employees table. The employees table has the following structure:
+
+id: an integer column that uniquely identifies each employee.
+name: a text column that contains the name of the employee.
+birthdate: a date column that contains the birth date of the employee
+manager_id: an integer column that identifies the manager of each employee. The manager_id corresponds to an id in the same employees table. This means that our table has a recursive relationship with itself - an employee can be a manager to other employees. It is nullable: top managers do not have managers above them.
+Your manager comes up with an interesting task for you. They want to identify managers who have two or more direct subordinates aged 60 or older. These managers have experience managing seasoned professionals. The purpose of this task is to plan a special recognition event for these managers and their subordinates.
+
+The query should return each qualifying manager's id, name, and the count of their direct subordinates who are 60 years or older (older_subordinate_count).
+
+The results should be ordered by the count of older subordinates in descending order. In case of a tie, managers should be ordered by their id in descending order.
+
+GLHF!
+
+Desired Output
+
+The desired output should look like this:
+
+id	name	older_subordinate_count
+1	Sana Kessler	3
+20	Carroll Larson PhD	2
+3	Dorene Hickle Jr.	2
+...
+
+
+*/
+
+
+
+WITH old AS (
+    SELECT id, manager_id
+    FROM employees
+    WHERE birthdate <= CURRENT_DATE - INTERVAL '60 years'
+)
+
+SELECT e.id,
+       e.name,
+       COUNT(*) AS older_subordinate_count
+FROM old o
+JOIN employees e ON o.manager_id = e.id
+GROUP BY e.id, e.name
+HAVING COUNT(*) >= 2
+ORDER BY COUNT(*) DESC, e.id DESC;
