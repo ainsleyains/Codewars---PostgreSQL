@@ -1,0 +1,48 @@
+/*
+
+Hi!
+You need to write a sql query that will return the daily balance history from monetary operations tables for all the time.
+
+The balance of the day (end day balance) is equal to the balance at the begin of the day with total amount of operations during the day added. The balance at the begin of the day is equal to the balance at the end of the previous day. The balance before the very first operation is zero.
+
+Input
+
+operations
+
+ Column    |  Type      |
+-----------+------------+
+ amount    | numeric    |
+ date      | timestamp  |
+    amount             date      
+--------------------------------------+
+502.944042810036   2020-01-01T00:01:00.000+00:00
+1101.5004691791    2020-01-01T00:02:00.000+00:00
+1618.92180791447   2020-01-01T00:03:00.000+00:00
+-1656.39770507234  2020-01-02T10:01:00.000+00:00
+656.39770507234    2020-01-03T00:05:00.000+00:00
+-656.39770507234   2020-01-03T00:07:00.000+00:00
+613.944042810036   2020-01-04T01:01:00.000+00:00
+..
+Output
+
+ Column    |  Type      |
+-----------+------------+
+ date      | date       |
+ balance   | numeric    |
+  date    |   balance      
+--------------------------+
+2020-01-01  3223.3663199036064
+2020-01-02  1566.9686148312664
+2020-01-03  1566.9686148312664
+
+
+
+*/
+
+
+
+
+SELECT DISTINCT date::date AS date,
+       SUM(amount) OVER (ORDER BY date::date) AS balance
+FROM operations
+ORDER BY date;
