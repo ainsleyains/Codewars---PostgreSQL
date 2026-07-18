@@ -1,0 +1,28 @@
+/*
+
+In mathematics, a Diophantine equation is a polynomial equation, usually in two or more unknowns, such that only the integer solutions are sought or studied.
+
+the task is to find the number of pairs of x and y are
+
+x^2 + y^3 = n  which n <= 1e+18 x >= 0 y >= 0
+
+Examples:
+
+DEquations.Solve(9) => return 2;
+
+DEquations.Solve(10000000000000000000) => return 1;
+
+
+*/
+
+
+SELECT DISTINCT n,
+       (SELECT COUNT(*)
+        FROM GENERATE_SERIES(0, r::INT + 1) e,
+             LATERAL (SELECT a.n - e::numeric * e * e) v(v),
+             LATERAL (SELECT FLOOR(SQRT(v))::numeric) s(s)
+        WHERE v >= 0
+          AND (s*s = v OR (s+1)*(s+1) = v OR (s-1)*(s-1) = v)
+       ) res
+FROM dequations a, FLOOR(CBRT(a.n::float8)) r
+ORDER BY n;
