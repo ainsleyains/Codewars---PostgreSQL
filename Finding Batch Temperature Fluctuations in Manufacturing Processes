@@ -1,0 +1,68 @@
+/*
+
+You are working with a dataset from a manufacturing process. Each row in the dataset represents a stage in the process of a batch. Each batch starts with an event labeled 'Start' and includes various stages with different temperature readings. Your task is to calculate the maximum temperature fluctuation within each batch.
+
+The dataset is stored in a table named assembly_log. The table has the following columns:
+
+id (int, primary key): A unique identifier for each row. It is assumed that rows are added in increasing order of id
+process_id (int): Identifier for the process.
+event (string): Type of event, which can be 'Start', various stage names, or 'Ignore'.
+value (integer, representing degrees): Temperature reading at each stage.
+Write an SQL query to calculate the maximum temperature fluctuation for each batch in each process. A batch is defined as a sequence of events starting with a 'Start' event and ending just before the next 'Start' event. Ignore any events labeled as 'Ignore'. Subsequent events following a 'Start' event within a batch can be random, including various stages or 'Ignore' events. However, the initiation of each new batch must be marked by a 'Start' event.
+
+Requirements:
+
+Identify each batch using the 'Start' events. Batches are specific to each process_id.
+For each batch, calculate the temperature fluctuation. This is the difference between the maximum and minimum temperature (value) readings in that batch.
+Do not include temperature readings from events labeled as 'Ignore' in your calculations.
+The output should include columns for process_id, batch_id, and temperature_fluctuation. batch_id is a sequential number you will assign to each batch for identification, starting from 1 for each process_id.
+
+Sort the results by process_id and then by batch_id - both in ascending order.
+
+For this sample data:
+
+| id | process_id | event   | value |
+|----|------------|---------|-------|
+| 1  | 1          | Start   | 20    |
+| 2  | 1          | Stage A | 22    |
+| 3  | 1          | Stage B | 25    |
+| 4  | 1          | Ignore  | 30    |
+| 5  | 1          | Start   | 24    |
+| 6  | 1          | Stage A | 26    |
+| 7  | 1          | Stage B | 28    |
+| 8  | 2          | Start   | 18    |
+| 9  | 2          | Stage A | 19    |
+| 10 | 2          | Stage B | 21    |
+| 11 | 2          | Stage C | 23    |
+| 12 | 2          | Stage D | 22    |
+Expected output is the following:
+
+| process_id | batch_id | temperature_fluctuation |
+|------------|----------|-------------------------|
+| 1          | 1        | 5                       |
+| 1          | 2        | 4                       |
+| 2          | 1        | 5                       |
+
+
+
+*/
+
+
+WITH numbered AS (
+    SELECT process_id,
+           event,
+           value,
+           SUM(CASE WHEN event = 'Start' THEN 1 ELSE 0 END)
+               OVER (PARTITION BY process_id ORDER BY id) AS batch_id
+    FROM assembly_log
+)
+SELECT process_id,
+       batch_id,
+       MAX(value) - MIN(value) AS temperature_fluctuation
+FROM numbered
+WHERE event != 'Ignore'
+  AND batch_id > 0
+GROUP BY process_id, batch_id
+ORDER BY process_id, batch_id;
+
+
