@@ -1,0 +1,87 @@
+/*
+
+In many businesses, particularly in IT and customer support, tracking the status of tickets (requests, tasks, issues, etc.) is crucial for efficient operations and customer satisfaction. Understanding how many tickets are opened, closed, and actively being worked on in a given time frame can help in resource planning, identifying bottlenecks, and improving overall service quality. This task focuses on analyzing ticket status on a weekly basis over the course of a year.
+
+Imagine a company that uses a ticketing system to handle customer service requests. Each ticket has an opening date and, once resolved, a closing date. The company wants to analyze these tickets on a weekly basis to understand the volume of work and ensure adequate staffing and resources.
+
+You are given a PostgreSQL database containing a table named ticket_status with the following structure:
+
+ticket_id (int, primary key): An integer representing the unique ID of the ticket.
+start_date (date): The date when the ticket was opened (created).
+finish_date (date, nullable): The date when the ticket was closed. If the ticket is still open, this field is NULL.
+The goal is to write an SQL query that provides a weekly report for the year 2024. This report should include the following columns:
+
+week: The week number of the year, including the start and end dates of that week in the format "Week X (YYYY-MM-DD - YYYY-MM-DD)".
+opened: The number of tickets that were opened during that week.
+closed: The number of tickets that were closed during that week.
+active: The number of tickets that were opened at any time before or during that week and have not been closed by the end of that week.
+Requirements:
+
+Weekly Segmentation: The analysis should cover the entire calendar year, divided into ISO weeks. Each week is defined as a period from Monday to Sunday, so thus partial weeks of the next year should be excluded.
+Date Range in Week Column: Each week should be labeled with its corresponding start and end dates.
+Active Ticket Calculation: A ticket is active in a week if it was opened before the end of that week and either still open or closed after the start of that week.
+Handling NULL finish_date: If finish_date is NULL, the ticket should be considered as still open (or active).
+Order the results by week, starting from the first week of 2024.
+
+Let's take this sample data:
+
+Ticket 101: Opened on 2024-01-01 and closed on 2024-01-15.
+Ticket 102: Opened on 2024-01-03 and closed on 2024-01-18.
+Ticket 103: Opened on 2024-01-05 and still open (finish_date is NULL).
+Ticket 104: Opened on 2024-01-08 and closed on 2024-01-22.
+Ticket 105: Opened on 2024-01-12 and closed on 2024-02-05
+Ticket 106: Opened on 2024-01-15 and still open (finish_date is NULL).
+Ticket 107: Opened on 2024-01-20 and closed on 2024-02-10.
+The desired output should look like this:
+
+week	opened	closed	active
+Week 1 (2024-01-01 - 2024-01-07)	3	0	3
+Week 2 (2024-01-08 - 2024-01-14)	2	0	5
+Week 3 (2024-01-15 - 2024-01-21)	2	2	5
+Week 4 (2024-01-22 - 2024-01-28)	0	1	4
+Week 5 (2024-01-29 - 2024-02-04)	0	0	4
+Week 6 (2024-02-05 - 2024-02-11)	0	2	2
+Week 7 (2024-02-12 - 2024-02-18)	0	0	2
+...
+GLHF!
+
+
+*/
+
+
+WITH weeks AS (
+  SELECT
+    ROW_NUMBER() OVER (ORDER BY wk)  AS week_no,
+    wk::date                         AS week_start,
+    (wk + INTERVAL '6 days')::date   AS week_end
+  FROM generate_series(
+    DATE_TRUNC('week', DATE '2024-01-01'),
+    DATE '2024-12-31',
+    INTERVAL '1 week'
+  ) AS wk
+)
+SELECT
+  'Week ' || w.week_no
+    || ' (' || to_char(w.week_start, 'YYYY-MM-DD')
+    || ' - ' || to_char(w.week_end,   'YYYY-MM-DD') || ')'   AS week,
+
+  COUNT(*) FILTER (
+    WHERE t.start_date BETWEEN w.week_start AND w.week_end
+  ) AS opened,
+
+  COUNT(*) FILTER (
+    WHERE t.finish_date BETWEEN w.week_start AND w.week_end
+  ) AS closed,
+
+  COUNT(*) FILTER (
+    WHERE t.start_date <= w.week_end
+      AND (t.finish_date IS NULL OR t.finish_date > w.week_end)
+  ) AS active
+
+FROM weeks w
+LEFT JOIN ticket_status t
+       ON t.start_date <= w.week_end
+      AND (t.finish_date IS NULL OR t.finish_date >= w.week_start)
+WHERE w.week_end <= DATE '2024-12-31'
+GROUP BY w.week_no, w.week_start, w.week_end
+ORDER BY w.week_no;
