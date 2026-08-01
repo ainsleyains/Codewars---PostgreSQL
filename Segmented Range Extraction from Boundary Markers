@@ -1,0 +1,62 @@
+/*
+
+A database contains a table named categories with records indicating the start and end boundaries of different categories. Each category might be broken into segments, represented by start and end boundaries. These boundaries can repeat for the same category, indicating different segments for the same category. The table only captures the boundary markers, not the numbers in between.
+
+Your challenge is to derive a comprehensive range for each segment of every category.
+
+The table categories has the following structure:
+
+category (varchar) - The name of the category (e.g., 'A', 'B').
+range (integer) - An integer representing a boundary in the category.
+Key Assumptions for the data in the table:
+
+There are no overlaps within or between categories. That is, a number that is an end boundary for one segment will be followed by a start boundary for the next segment.
+The same category name can appear multiple times, indicating different segments for that category.
+No two consecutive boundaries belong to the same category.
+All boundaries have start and end range
+Expected Output Columns:
+
+category: The name of the category.
+start_range: The starting boundary of that segment for the category.
+end_range: The ending boundary of that segment for the category.
+Result should be ordered by start_range in ascending order.
+
+Sample Data:
+
+| category | range |
++----------+-------+
+| A        | 1     |
+| A        | 15    |
+| B        | 16    |
+| B        | 31    |
+| A        | 32    |
+| A        | 40    |
+Expected Output:
+
+| category | start_range | end_range |
++----------+-------------+-----------+
+| A        | 1           | 15        |
+| B        | 16          | 31        |
+| A        | 32          | 40        |
+
+
+
+*/
+
+
+WITH marked AS (
+                  SELECT category,
+                         range,
+                         ROW_NUMBER() OVER (ORDER BY range) - 
+                         ROW_NUMBER() OVER (PARTITION BY category ORDER BY range) AS rn
+                  FROM categories
+)
+
+SELECT category,
+       MIN(range) AS start_range,
+       MAX(range) AS end_range
+FROM marked 
+GROUP BY category, rn
+ORDER BY 2;
+
+
