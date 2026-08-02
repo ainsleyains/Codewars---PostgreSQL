@@ -1,0 +1,64 @@
+/*
+
+Imagine a system where users are classified into one of two classes - 'a' or 'b'. A single user may belong to one class, or they may belong to both. Also, a unique aspect of this system is that a user may have multiple records of belonging to the same class, or they may belong to both classes multiple times.
+
+Your task is to write a query that accurately counts the number of users in each class, with a special rule: If a user belongs to both classes, they should only be counted under class 'b'.
+
+users table has the following schema:
+
+id (integer): A unique identifier for each record.
+user_id (integer): An identifier for each user. Note that the same user ID may appear multiple times if a user belongs to multiple classes.
+class (char): The class a user belongs to. It can only be either 'a' or 'b'.
+Your resulting output will include the following columns:
+
+class (char): The class identifier. In this assignment, it can only be 'a' or 'b'.
+count (integer): The number of unique users belonging to each class, considering the special rule that a user belonging to both 'a' and 'b' should only be counted under class 'b'.
+So thus such dataset:
+
+id | user_id | class |
+---|---------|-------|
+1  | 1       | a     |
+2  | 1       | b     |
+3  | 1       | b     |
+4  | 2       | b     |
+5  | 3       | a     |
+will provide the following result:
+
+| class | count |
+|-------|-------|
+| a     | 1     |
+| b     | 2     |
+GLHF!
+
+
+*/
+
+SELECT class,
+       COUNT(*) AS count
+
+FROM ( SELECT MAX(class) AS class
+       FROM users
+       GROUP BY user_id
+)t
+
+GROUP BY class;
+
+
+
+#Alternative way
+
+WITH ranked AS (
+                SELECT  class,
+                        user_id,
+                        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY class DESC) AS r
+                FROM users
+
+)
+
+SELECT class,
+       COUNT(r) AS count
+FROM ranked
+WHERE r = 1
+GROUP BY class;
+
+
