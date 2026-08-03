@@ -1,0 +1,85 @@
+/*
+
+You are working as a data analyst for a high-security research facility. Recently, an internal security breach occurred — classified information was leaked from somewhere inside the building.
+
+Investigators have discovered a key clue:
+
+The person responsible accessed two different security zones, one right after the other, and the time gap between those two accesses is crucial for reconstructing the event timeline.
+
+Your job is to analyze badge-swipe logs stored in a table called access_logs.
+
+The table has the following structure:
+
+id (int): Primary key
+employee_id (int): The ID of the employee who swiped their badge
+zone (varchar): The security zone they entered
+access_time (timestamp): The exact moment the badge was used to enter the zone
+Each row represents a single door swipe made by an employee.
+
+Your Task
+
+Write a SQL query that determines, for each employee, the time difference (in seconds) between their two most recent badge swipes into two different security zones.
+
+Only employees who have accessed at least two different zones should appear in the result.
+
+Output Columns:
+
+employee_id – The employee’s ID
+seconds_diff – The absolute time difference (in seconds) between the timestamps of their two most recent different-zone accesses
+Results must be ordered first by seconds_diff in ascending order, and then by employee_id in ascending order when multiple employees have the same time difference.
+
+Notes:
+
+Each entry in access_logs represents a single badge swipe; duplicates do not occur in this system.
+Only different zones count — two most recent accesses to the same zone must not be paired.
+An employee must have accessed at least two different zones (two or more), not exactly two — if they accessed three, four, or more zones, the two most recent distinct zones should still be used.
+For each zone, only the most recent access time is relevant.
+The time difference must always be returned as a non-negative number of seconds.
+Each employee must appear only once in the output.
+The underlying table is partitioned by day, and each query operates on a single day’s partition, so you do not need to filter by date or apply any additional time-range conditions.
+It is guaranteed by the facility’s access control system that no employee can swipe into two different zones at the exact same timestamp, so identical access_time values for different zones will never occur.
+For the following sample data:
+
+| employee_id |     zone     |      access_time        |
++-------------+--------------+-------------------------+
+|     1       |   Alpha      | 2023-06-01 12:00:00     |
+|     1       |   Beta       | 2023-06-01 12:03:00     |
+|     1       |   Alpha      | 2023-06-01 12:04:00     |
+|     2       |   Gamma      | 2023-06-01 09:10:00     |
+|     2       |   Gamma      | 2023-06-01 09:12:00     |
+|     2       |   Delta      | 2023-06-01 09:15:00     |
+|     3       |   Omega      | 2023-06-01 14:00:00     |
+Expected output is:
+
+| employee_id | seconds_diff |
++-------------+--------------+
+|      1      |      60      |
+|      2      |     180      |
+GLHF!
+
+
+
+*/
+
+WITH zone_time AS (
+    SELECT employee_id,
+           zone,
+           access_time,
+           ROW_NUMBER() OVER (PARTITION BY employee_id, zone ORDER BY access_time DESC) AS zone_rn
+    FROM access_logs
+),
+ranked AS (
+    SELECT employee_id,
+           access_time,
+           ROW_NUMBER() OVER (PARTITION BY employee_id ORDER BY access_time DESC) AS rn
+    FROM zone_time
+    WHERE zone_rn = 1
+)
+SELECT employee_id,
+       EXTRACT(EPOCH FROM (MAX(access_time) - MIN(access_time))) AS seconds_diff
+FROM ranked
+WHERE rn <= 2
+GROUP BY employee_id
+HAVING COUNT(*) = 2
+ORDER BY seconds_diff, employee_id;
+
