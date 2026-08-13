@@ -1,0 +1,36 @@
+/*
+
+You are given a PostgreSQL table named bids that stores bids made on different products. It is guaranteed that each bid for product has unique timestamp and in ascending chronological order. However, not all bids raise the price; some may be lower than (or be the same as) previous bids. The table has the following schema:
+
+bid_id (integer) - Unique identifier for the bid.
+product_id (integer) - Identifier for the product the bid was placed on.
+date (timestamp) - The date and time the bid was made.
+price (integer) - The price of the bid.
+Your task is to create a query that fetches all the bids that raised the price on a product, i.e., the bids where the price is strictly higher than the highest price seen so far for that product. Lower bids must be filtered out. Additionally, the result must include 2 extra columns, bid_number and times_higher.
+
+Columns in the resultant dataset:
+
+product_id (integer) - Identifier for the product the bid was placed on.
+bid_number (integer) - a sequence number that represents the number of the bid that raised the price. It starts from 1 for the first bid and increments for each bid that raises the price.
+date (text) - The date and time the bid was made.
+price (integer) - The price of the bid.
+times_higher (numeric) - For the row with the highest bid for a product, this column shows how many times the highest price is higher than the initial price (the price of the first bid made) for the product. The value should be of numeric type and rounded to 2 decimal places. This value should be NULL for all rows except the one with the highest bid for a product.
+Result should be ordered by product_id and bid_number - both in ascending order.
+
+*/
+
+
+SELECT f.product_id,
+      ROW_NUMBER() OVER (PARTITION BY f.product_id ORDER BY date) AS bid_number,
+      b.date::TEXT,
+      b.price,
+      CASE WHEN price = maxprice THEN ROUND(maxprice/MIN(price) OVER (PARTITION BY f.product_id)::numeric,2) END times_higher
+FROM bids b 
+JOIN (
+        SELECT bid_id,
+               product_id,
+               MAX(price) OVER (PARTITION BY product_id ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING ) c,
+               MAX(price) OVER (PARTITION BY product_id) maxprice
+        FROM bids 
+)f USING (bid_id)
+WHERE c IS NULL OR c < price;
