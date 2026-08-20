@@ -23,7 +23,7 @@ WITH RECURSIVE seq(i, a, b) AS (
   FROM seq
   WHERE i < (SELECT MAX(n) FROM pell)
 )
-SELECT DISTINCT p.n, s.a::int AS res
+SELECT DISTINCT p.n, s.a::bigint AS res
 FROM pell p
 JOIN seq s ON s.i = p.n - 1
 ORDER BY p.n;
